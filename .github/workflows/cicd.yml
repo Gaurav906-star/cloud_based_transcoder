@@ -22,8 +22,12 @@ steps:
 
   - name: Install FFmpeg
     run: |
-      sudo apt-get update
-      sudo apt-get install -y ffmpeg
+- name: Install FFmpeg
+  run: |
+        sudo apt-get clean
+        sudo rm -rf /var/lib/apt/lists/*
+        sudo apt-get update --fix-missing
+        sudo apt-get install -y ffmpeg
 
   - name: Install dependencies
     run: |
