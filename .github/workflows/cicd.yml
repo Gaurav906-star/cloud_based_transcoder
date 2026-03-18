@@ -1,14 +1,13 @@
 name: CI/CD Pipeline - Video Transcoder
 
 on:
-push:
-branches:
-- main
-workflow_dispatch:
+  push:
+    branches:
+      - main
 
 jobs:
-setup:
-runs-on: ubuntu-latest
+  setup:
+    runs-on: ubuntu-22.04
 
  
 steps:
@@ -22,12 +21,8 @@ steps:
 
   - name: Install FFmpeg
     run: |
-- name: Install FFmpeg
-  run: |
-        sudo apt-get clean
-        sudo rm -rf /var/lib/apt/lists/*
-        sudo apt-get update --fix-missing
-        sudo apt-get install -y ffmpeg
+      sudo apt-get update
+      sudo apt-get install -y ffmpeg
 
   - name: Install dependencies
     run: |
@@ -53,7 +48,7 @@ steps:
  
 
 test:
-runs-on: ubuntu-latest
+runs-on: ubuntu-22.04
 needs: lint
 
  
@@ -80,7 +75,7 @@ steps:
  
 
 build:
-runs-on: ubuntu-latest
+runs-on: ubuntu-22.04
 needs: test
 
  
@@ -113,14 +108,14 @@ steps:
 
   - name: Upload to S3
     run: |
-      aws s3 cp app.zip s3://YOUR_BUCKET_NAME/app.zip --region us-east-1
+      aws s3 cp app.zip s3://cloud-transcoder-builds/app.zip --region us-east-1
     env:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
  
 
 deploy:
-runs-on: ubuntu-latest
+runs-on: ubuntu-22.04
 needs: upload
 
  
@@ -132,7 +127,7 @@ steps:
       aws elasticbeanstalk create-application-version \
         --application-name "YOUR_APP_NAME" \
         --version-label "deploy-${{ github.run_number }}" \
-        --source-bundle S3Bucket="YOUR_BUCKET_NAME",S3Key="app.zip" \
+        --source-bundle S3Bucket="cloud-transcoder-builds",S3Key="app.zip" \
         --region us-east-1
 
       aws elasticbeanstalk update-environment \
