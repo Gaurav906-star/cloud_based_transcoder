@@ -1,0 +1,147 @@
+{% load static %}
+
+<!doctype html>
+
+<html>
+  <head>
+    <title>Your Videos</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}" />
+
+    ```
+    <!-- HLS Player -->
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    ```
+  </head>
+
+  <body>
+    <div class="app">
+      ```
+      <!-- Sidebar -->
+      <div class="sidebar">
+        <h2>⚡ TranscodeCloud</h2>
+
+        <ul>
+          <li onclick="goHome()">⬆ Upload</li>
+          <li class="active">🎬 Videos</li>
+        </ul>
+      </div>
+
+      <!-- Main -->
+      <div class="main">
+        <h1>🎬 Your Videos</h1>
+
+        <div id="videosContainer"></div>
+      </div>
+      ```
+    </div>
+
+    <script>
+      function goHome() {
+        window.location.href = "/";
+      }
+
+      // Fetch videos from API
+      function fetchVideos() {
+        fetch("/videos/")
+          .then((res) => res.json())
+          .then((data) => renderVideos(data));
+      }
+
+      // Render UI
+      function renderVideos(videos) {
+        const container = document.getElementById("videosContainer");
+        container.innerHTML = "";
+
+        videos.forEach((v) => {
+          const statusLabel =
+            v.status === "pending"
+              ? "🟡 Pending"
+              : v.status === "processing"
+                ? "🟠 Processing"
+                : "🟢 Completed";
+
+          const showPlayer = v.status === "processed";
+
+          const card = `
+            <div class="video-card">
+
+                <div class="video-info">
+                    <h3>${v.name}</h3>
+                    <span class="status ${v.status}">${statusLabel}</span>
+                </div>
+
+                <!-- Progress -->
+                <div class="progress-container">
+                    <div class="progress-fill" style="width:${v.progress}%"></div>
+                </div>
+
+                <p>${v.progress}%</p>
+
+                ${
+                  showPlayer
+                    ? `
+
+                    <!-- HLS Button -->
+                    <div class="res-buttons">
+                        <button onclick="playHLS('${v.hls}', '${v.name}')">
+                            📡 Play Stream
+                        </button>
+                    </div>
+
+                    <!-- Video Player -->
+                    <video id="player-${v.name}" controls width="500"></video>
+
+                `
+                    : ""
+                }
+
+            </div>
+        `;
+
+          container.innerHTML += card;
+        });
+      }
+
+      // HLS Playback (Adaptive Streaming)
+      function playHLS(url, name) {
+        const video = document.getElementById(`player-${name}`);
+
+        // 🔥 Reset video completely
+        if (video.hls) {
+          video.hls.destroy();
+          video.hls = null;
+        }
+
+        video.pause();
+        video.removeAttribute("src");
+        video.load();
+
+        if (Hls.isSupported()) {
+          const hls = new Hls({
+            enableWorker: true,
+            lowLatencyMode: false,
+          });
+
+          hls.loadSource(url);
+          hls.attachMedia(video);
+
+          video.hls = hls;
+
+          hls.on(Hls.Events.MANIFEST_PARSED, function () {
+            video.currentTime = 0;
+            video.play();
+          });
+        } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
+          video.src = url;
+          video.play();
+        }
+      }
+
+      // Auto refresh every 3 sec
+      {% comment %} setInterval(fetchVideos, 3000); {% endcomment %}
+
+      // Initial load
+      fetchVideos();
+    </script>
+  </body>
+</html>

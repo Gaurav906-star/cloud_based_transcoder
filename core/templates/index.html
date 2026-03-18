@@ -1,0 +1,119 @@
+{% load static %}
+
+<!doctype html>
+
+<html>
+  <head>
+    <title>TranscodeCloud</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}" />
+  </head>
+
+  <body>
+    <div class="app">
+      ```
+      <!-- Sidebar -->
+      <div class="sidebar">
+        <h2>⚡ TranscodeCloud</h2>
+        <p class="sub">MSc Cloud Computing</p>
+
+        <ul>
+          <li class="active">⬆ Upload Video</li>
+          <li onclick="goToVideos()">🎬 Videos</li>
+        </ul>
+      </div>
+
+      <!-- Main -->
+      <div class="main">
+        <!-- HERO -->
+        <div class="hero">
+          <h1>🎬 Cloud Video Transcoding Platform</h1>
+          <p>
+            Upload, process and stream videos in multiple resolutions — powered
+            by Django + FFmpeg + WebSockets
+          </p>
+        </div>
+
+        <!-- FEATURES -->
+        <div class="features">
+          <div class="feature-card">
+            <h3>⚡ Multi-Resolution</h3>
+            <p>720p, 480p, 360p video outputs</p>
+          </div>
+
+          <div class="feature-card">
+            <h3>📡 Real-Time Processing</h3>
+            <p>Live progress updates via WebSockets</p>
+          </div>
+
+          <div class="feature-card">
+            <h3>🎧 Audio Extraction</h3>
+            <p>AAC + MP3 support</p>
+          </div>
+
+          <div class="feature-card">
+            <h3>🚀 Scalable Architecture</h3>
+            <p>Ready for AWS Lambda & S3</p>
+          </div>
+        </div>
+
+        <!-- UPLOAD BOX -->
+        <div class="upload-box" onclick="openFilePicker()">
+          <input type="file" id="fileInput" hidden />
+
+          <h2>⬆ Upload Video</h2>
+          <p>Click or drag & drop your video here</p>
+
+          <p id="fileName"></p>
+
+          <div class="progress-bar">
+            <div id="progress"></div>
+          </div>
+        </div>
+      </div>
+      ```
+    </div>
+
+    <script>
+      function goToVideos() {
+        window.location.href = "/videos-page/";
+      }
+
+      function openFilePicker() {
+        document.getElementById("fileInput").click();
+      }
+
+      document
+        .getElementById("fileInput")
+        .addEventListener("change", function () {
+          let file = this.files[0];
+          if (!file) return;
+
+          document.getElementById("fileName").innerText = file.name;
+
+          uploadVideo(file);
+        });
+
+      function uploadVideo(file) {
+        let xhr = new XMLHttpRequest();
+        let formData = new FormData();
+
+        formData.append("file", file);
+
+        xhr.upload.onprogress = function (e) {
+          if (e.lengthComputable) {
+            let percent = (e.loaded / e.total) * 100;
+            document.getElementById("progress").style.width = percent + "%";
+          }
+        };
+
+        xhr.onload = function () {
+          alert("Upload complete 🚀");
+          document.getElementById("progress").style.width = "0%";
+        };
+
+        xhr.open("POST", "/upload/");
+        xhr.send(formData);
+      }
+    </script>
+  </body>
+</html>
