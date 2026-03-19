@@ -1,40 +1,61 @@
-# videos/db.py
+import boto3
+from django.conf import settings
+from datetime import datetime
 
-import json
-import os
+dynamodb = boto3.resource(
+    'dynamodb',
+    region_name='us-east-1'
+)
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DB_FILE = os.path.join(BASE_DIR, "storage/db.json")
+table = dynamodb.Table('videos')  
 
 def save_video(video_id, status):
-    data = {}
+    table.put_item(
+        Item={
+            'video_id': video_id,
+            'status': status,
+            'progress': 0,
+            'created_at': datetime.utcnow().isoformat()
+        }
+    )
 
-    if os.path.exists(DB_FILE):
-        with open(DB_FILE) as f:
-            data = json.load(f)
-
-    data[video_id] = {
-        "status": status
-    }
-
-    with open(DB_FILE, 'w') as f:
-        json.dump(data, f)
 
 def update_progress(video_id, progress):
+    table.update_item(
+        Key={"video_id": video_id},
+        UpdateExpression="SET progress = :p, #s = :s",
+        ExpressionAttributeValues={   
+            ":p": progress,          
+            ":s": "processing"
+        },
+        ExpressionAttributeNames={
+            "#s": "status"
+        }
+    )
 
-    with open(DB_FILE) as f:
-        data = json.load(f)
-
-    data[video_id]["progress"] = progress
-    data[video_id]["status"] = "processing"
-
-    with open(DB_FILE, "w") as f:
-        json.dump(data, f)
 
 def get_all_videos():
+    response = table.scan()
+    items = response.get("Items", []) 
 
-    if not os.path.exists(DB_FILE):
-        return {}
+    result = {}
+    for item in items:
+        result[item["video_id"]] = item
 
-    with open(DB_FILE) as f:
-        return json.load(f)
+    return result
+    
+
+def mark_completed(video_id):
+    table.update_item(
+        Key={"video_id", video_id},
+        UpdateExpression="SET #s = :s, progress = :p",
+         ExpressionAttributeValues={   
+            ":p": 100,          
+            ":s": "completed"
+        },
+        ExpressionAttributeNames={
+          "#s": "status"  
+        }
+        
+        
+        )

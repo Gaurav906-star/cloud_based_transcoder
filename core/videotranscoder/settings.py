@@ -27,7 +27,7 @@ SECRET_KEY = 'django-insecure-dbn4fx1piqt^bvabgl%4%pz+413(o1266!^u0$5jlg@zdh)z*o
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -59,7 +59,7 @@ ROOT_URLCONF = 'videotranscoder.urls'
 STATIC_URL = '/static/'
 
 STATICFILES_DIRS = [
-    BASE_DIR / "/static",   # ✅ THIS is the correct way
+    BASE_DIR / "static",  
 ]
 TEMPLATES = [
     {

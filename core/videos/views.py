@@ -7,6 +7,8 @@ from .db import save_video
 from django.shortcuts import render
 from django.http import JsonResponse
 from .db import get_all_videos
+import boto3
+
 
 
 
@@ -19,16 +21,27 @@ def upload_video(request):
     file_path = os.path.join(RAW_DIR, file.name)
 
     # ✅ Save file locally (simulate S3)
-    with open(file_path, 'wb+') as destination:
-        for chunk in file.chunks():
-            destination.write(chunk)
+    s3_client = boto3.client('s3', region_name='us-east-1')
+    
+    s3_key = f"raw/{file.name}"
+    
+    s3_client.upload_fileobj(
+        file,
+        "transcoding-raw-videos",
+        s3_key,
+        ExtraArgs={
+            "ContentType": file.content_type
+        }
+        )
 
     # ✅ Save metadata (THIS is where you add it)
     save_video(file.name, "uploaded")
 
     return Response({
         "message": "Uploaded locally",
-        "filename": file.name
+        "filename": file.name,
+        "s3_key":s3_key,
+        "file_path":f"https://transcoding-raw-videos.s3.amazonaws.com/{s3_key}"
     })
 
 
