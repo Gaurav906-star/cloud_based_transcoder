@@ -8,6 +8,7 @@ from django.shortcuts import render
 from django.http import JsonResponse
 from .db import get_all_videos
 import boto3
+import uuid
 
 
 
@@ -19,8 +20,6 @@ def upload_video(request):
     file = request.FILES['file']
     
     file_path = os.path.join(RAW_DIR, file.name)
-
-    # ✅ Save file locally (simulate S3)
     s3_client = boto3.client('s3', region_name='us-east-1')
     
     s3_key = f"raw/{file.name}"
@@ -33,9 +32,10 @@ def upload_video(request):
             "ContentType": file.content_type
         }
         )
-
+    
+    video_id = str(uuid.uuid4())
     # ✅ Save metadata (THIS is where you add it)
-    save_video(file.name, "uploaded")
+    save_video(video_id, "uploaded")
 
     return Response({
         "message": "Uploaded locally",
