@@ -9,7 +9,7 @@ RUN apt-get update -y && \
     apt-get install -y --no-install-recommends ffmpeg ca-certificates && \
     rm -rf /var/lib/apt/lists/*
 
-RUN pip install --no-cache-dir boto3
+RUN pip install --no-cache-dir boto3 openai
 
 HEALTHCHECK CMD pgrep -f workers.py || exit 1
 
