@@ -1,147 +1,218 @@
 {% load static %}
 
 <!doctype html>
-
 <html>
-  <head>
+<head>
     <title>Your Videos</title>
     <link rel="stylesheet" href="{% static 'css/style.css' %}" />
-
-    ```
-    <!-- HLS Player -->
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-    ```
-  </head>
 
-  <body>
-    <div class="app">
-      ```
-      <!-- Sidebar -->
-      <div class="sidebar">
+    <style>
+        .video-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 20px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+        }
+
+        .video-left {
+            flex: 1;
+        }
+
+        .video-right {
+            width: 520px;
+        }
+
+        .status {
+            font-weight: bold;
+        }
+
+        .progress-container {
+            background: #eee;
+            height: 8px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+
+        .progress-fill {
+            background: #4caf50;
+            height: 100%;
+            width: 0%;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+
+<body>
+<div class="app">
+
+    <div class="sidebar">
         <h2>⚡ TranscodeCloud</h2>
-
         <ul>
-          <li onclick="goHome()">⬆ Upload</li>
-          <li class="active">🎬 Videos</li>
+            <li onclick="goHome()">⬆ Upload</li>
+            <li class="active">🎬 Videos</li>
         </ul>
-      </div>
-
-      <!-- Main -->
-      <div class="main">
-        <h1>🎬 Your Videos</h1>
-
-        <div id="videosContainer"></div>
-      </div>
-      ```
     </div>
 
-    <script>
-      function goHome() {
-        window.location.href = "/";
-      }
+    <div class="main">
+        <h1>🎬 Your Videos</h1>
+        <div id="videosContainer"></div>
+    </div>
 
-      // Fetch videos from API
-      function fetchVideos() {
-        fetch("/videos/")
-          .then((res) => res.json())
-          .then((data) => renderVideos(data));
-      }
+</div>
 
-      // Render UI
-      function renderVideos(videos) {
-        const container = document.getElementById("videosContainer");
-        container.innerHTML = "";
+<script>
+function goHome() {
+    window.location.href = "/";
+}
 
-        videos.forEach((v) => {
-          const statusLabel =
-            v.status === "pending"
-              ? "🟡 Pending"
-              : v.status === "processing"
-                ? "🟠 Processing"
-                : "🟢 Completed";
+const players = {};
+let renderedVideos = {}; // track already rendered
 
-          const showPlayer = v.status === "processed";
+// Initial fetch
+function fetchVideos() {
+    fetch("/videos/")
+        .then(res => res.json())
+        .then(data => {
+            const videos = Array.isArray(data) ? data : data.data;
+            renderVideos(videos || []);
+        })
+        .catch(err => {
+            console.error(err);
+        });
+}
 
-          const card = `
-            <div class="video-card">
+// Render ONLY once
+function renderVideos(videos) {
+    const container = document.getElementById("videosContainer");
 
-                <div class="video-info">
-                    <h3>${v.name}</h3>
-                    <span class="status ${v.status}">${statusLabel}</span>
-                </div>
+    videos.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
 
-                <!-- Progress -->
+    videos.forEach(v => {
+
+        if (renderedVideos[v.id]) return; // ✅ prevent re-render
+
+        renderedVideos[v.id] = true;
+
+        const statusLabel =
+            v.status === "pending" ? "🟡 Pending" :
+            v.status === "processing" ? "🟠 Processing" :
+            v.status === "completed" ? "🟢 Completed" :
+            "⚪ Unknown";
+
+        const card = document.createElement("div");
+        card.className = "video-card";
+
+        card.innerHTML = `
+            <div class="video-left">
+                <h3>${v.title || v.name}</h3>
+                <p><b>File:</b> ${v.name}</p>
+
+                <p id="desc-${v.id}">${v.description || ""}</p>
+                <p>🏷 ${Array.isArray(v.tags) ? v.tags.join(", ") : ""}</p>
+
+                <p id="status-${v.id}" class="status ${v.status}">
+                    ${statusLabel}
+                </p>
+
                 <div class="progress-container">
-                    <div class="progress-fill" style="width:${v.progress}%"></div>
+                    <div id="progress-${v.id}" class="progress-fill" style="width:${v.progress || 0}%"></div>
                 </div>
 
-                <p>${v.progress}%</p>
+                <p id="progress-text-${v.id}">${v.progress || 0}%</p>
+            </div>
 
-                ${
-                  showPlayer
-                    ? `
-
-                    <!-- HLS Button -->
-                    <div class="res-buttons">
-                        <button onclick="playHLS('${v.hls}', '${v.name}')">
-                            📡 Play Stream
-                        </button>
-                    </div>
-
-                    <!-- Video Player -->
-                    <video id="player-${v.name}" controls width="500"></video>
-
-                `
-                    : ""
-                }
-
+            <div class="video-right">
+                <div id="player-container-${v.id}"></div>
             </div>
         `;
 
-          container.innerHTML += card;
+        container.appendChild(card);
+
+        // Player setup
+        if (v.status === "completed" && v.hls) {
+            setupPlayer(v);
+        }
+    });
+}
+
+// Setup player once
+function setupPlayer(v) {
+    const container = document.getElementById(`player-container-${v.id}`);
+
+    if (!container || players[v.id]) return;
+
+    container.innerHTML = `
+        <video id="player-${v.id}" controls width="500"></video>
+    `;
+
+    const video = document.getElementById(`player-${v.id}`);
+
+    if (Hls.isSupported()) {
+        const hls = new Hls();
+        hls.loadSource(v.hls);
+        hls.attachMedia(video);
+
+        hls.on(Hls.Events.MANIFEST_PARSED, function () {
+            video.play().catch(() => {});
         });
-      }
 
-      // HLS Playback (Adaptive Streaming)
-      function playHLS(url, name) {
-        const video = document.getElementById(`player-${name}`);
+        players[v.id] = hls;
 
-        // 🔥 Reset video completely
-        if (video.hls) {
-          video.hls.destroy();
-          video.hls = null;
-        }
+    } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
+        video.src = v.hls;
+        video.play();
+    }
+}
 
-        video.pause();
-        video.removeAttribute("src");
-        video.load();
+// 🔄 Update ONLY status (no re-render)
+function updateVideos() {
+    fetch("/videos/")
+        .then(res => res.json())
+        .then(data => {
+            const videos = Array.isArray(data) ? data : data.data;
 
-        if (Hls.isSupported()) {
-          const hls = new Hls({
-            enableWorker: true,
-            lowLatencyMode: false,
-          });
+            videos.forEach(v => {
 
-          hls.loadSource(url);
-          hls.attachMedia(video);
+                // Update status
+                const statusEl = document.getElementById(`status-${v.id}`);
+                if (statusEl) {
+                    const statusLabel =
+                        v.status === "pending" ? "🟡 Pending" :
+                        v.status === "processing" ? "🟠 Processing" :
+                        v.status === "completed" ? "🟢 Completed" :
+                        "⚪ Unknown";
 
-          video.hls = hls;
+                    statusEl.innerText = statusLabel;
+                    statusEl.className = `status ${v.status}`;
+                }
 
-          hls.on(Hls.Events.MANIFEST_PARSED, function () {
-            video.currentTime = 0;
-            video.play();
-          });
-        } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
-          video.src = url;
-          video.play();
-        }
-      }
+                // Update progress
+                const progressEl = document.getElementById(`progress-${v.id}`);
+                const progressText = document.getElementById(`progress-text-${v.id}`);
 
-      // Auto refresh every 3 sec
-      {% comment %} setInterval(fetchVideos, 3000); {% endcomment %}
+                if (progressEl) progressEl.style.width = `${v.progress || 0}%`;
+                if (progressText) progressText.innerText = `${v.progress || 0}%`;
 
-      // Initial load
-      fetchVideos();
-    </script>
-  </body>
+                // Setup player if just completed
+                if (v.status === "completed" && v.hls && !players[v.id]) {
+                    setupPlayer(v);
+                }
+            });
+        });
+}
+
+// 🚀 Initial load
+fetchVideos();
+
+// 🔄 Poll only updates (SAFE)
+setInterval(updateVideos, 5000);
+
+</script>
+
+</body>
 </html>

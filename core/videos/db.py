@@ -9,10 +9,11 @@ dynamodb = boto3.resource(
 
 table = dynamodb.Table('videos')  
 
-def save_video(video_id, status):
+def save_video(video_id,file_name, status):
     table.put_item(
         Item={
             'video_id': video_id,
+            'file_name': file_name,
             'status': status,
             'progress': 0,
             'created_at': datetime.utcnow().isoformat()

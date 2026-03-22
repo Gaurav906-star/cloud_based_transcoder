@@ -5,6 +5,7 @@ import os
 import time
 import base64
 import re
+import traceback
 from openai import OpenAI
 
 # AWS clients
@@ -97,9 +98,9 @@ def extract_json(text):
         print("⚠️ JSON extraction failed:", e)
 
     return {
-        "title": "Unknown",
-        "tags": [],
-        "description": text
+        "title": "Latest Video",
+        "tags": ["video"],
+        "description": text or "A video clip"
     }
 
 
@@ -107,16 +108,13 @@ def analyze_video_frame(video_id, input_file):
     frame_path = f"/tmp/{video_id}.jpg"
 
     try:
-        # Extract frame
         extract_frame(input_file, frame_path)
 
         if not os.path.exists(frame_path):
             raise Exception("Frame extraction failed")
 
-        # Encode
         base64_image = encode_image(frame_path)
 
-        # OpenAI request
         response = openApi_client.responses.create(
             model="gpt-4o-mini",
             input=[{
@@ -134,17 +132,26 @@ def analyze_video_frame(video_id, input_file):
             }]
         )
 
-        output_text = response.output_text
-        print("🧠 AI Response:", output_text)
+        output_text = getattr(response, "output_text", None)
 
-        data = extract_json(output_text)
+        if not output_text:
+            data = {
+                "title": "Latest Video",
+                "tags": ["video"],
+                "description": "A video clip"
+            }
+        else:
+            data = extract_json(output_text)
+
+        print("🧠 AI Response:", output_text)
 
     except Exception as e:
         print("❌ OpenAI/AI error:", e)
+        traceback.print_exc()
         data = {
-            "title": "Unknown",
-            "tags": [],
-            "description": str(e)
+            "title": "Latest Video",
+            "tags": ["video"],
+            "description": "A video clip"
         }
 
     save_ai_metadata(video_id, data)
@@ -153,30 +160,30 @@ def analyze_video_frame(video_id, input_file):
 # -----------------------------
 # Video Processing
 # -----------------------------
-def process_video(bucket, key):
+def process_video(bucket, key, video_id):
     filename = os.path.basename(key)
-    video_id, ext = os.path.splitext(filename)
+    _, ext = os.path.splitext(filename)
 
     input_file = f"/tmp/{video_id}{ext}"
     hls_dir = f"/tmp/hls_{video_id}"
 
-    print(f"\n🎬 Processing {filename}")
+    print(f"\n🎬 Processing {filename} (video_id={video_id})")
 
     update_status(video_id, "processing", 10)
 
     # Download
     s3.download_file(INPUT_BUCKET, key, input_file)
 
-    # AI analysis
+    # AI
     analyze_video_frame(video_id, input_file)
 
-    # HLS dir
     os.makedirs(hls_dir, exist_ok=True)
 
     # 360p
     subprocess.run([
         "ffmpeg","-y","-i",input_file,
         "-vf","scale=640:360",
+        "-threads","2",
         "-c:v","libx264","-c:a","aac",
         "-preset","fast","-crf","23",
         "-g","48","-sc_threshold","0",
@@ -192,6 +199,7 @@ def process_video(bucket, key):
     subprocess.run([
         "ffmpeg","-y","-i",input_file,
         "-vf","scale=854:480",
+        "-threads","2",
         "-c:v","libx264","-c:a","aac",
         "-preset","fast","-crf","23",
         "-g","48","-sc_threshold","0",
@@ -207,6 +215,7 @@ def process_video(bucket, key):
     subprocess.run([
         "ffmpeg","-y","-i",input_file,
         "-vf","scale=1280:720",
+        "-threads","2",
         "-c:v","libx264","-c:a","aac",
         "-preset","fast","-crf","23",
         "-g","48","-sc_threshold","0",
@@ -251,29 +260,43 @@ def poll_queue():
     print("🚀 Worker started...")
 
     while True:
-        response = sqs.receive_message(
-            QueueUrl=QUEUE_URL,
-            MaxNumberOfMessages=1,
-            WaitTimeSeconds=10
-        )
+        try:
+            response = sqs.receive_message(
+                QueueUrl=QUEUE_URL,
+                MaxNumberOfMessages=1,
+                WaitTimeSeconds=10
+            )
 
-        messages = response.get("Messages", [])
+            messages = response.get("Messages", [])
 
-        for msg in messages:
-            body = json.loads(msg["Body"])
-            bucket = body["bucket"]
-            key = body["key"]
+            for msg in messages:
+                try:
+                    body = json.loads(msg["Body"])
+                    print("📩 Message:", body)
 
-            try:
-                process_video(bucket, key)
+                    bucket = body["bucket"]
+                    key = body["key"]
 
-                sqs.delete_message(
-                    QueueUrl=QUEUE_URL,
-                    ReceiptHandle=msg["ReceiptHandle"]
-                )
+                    # ✅ SAFE video_id handling
+                    video_id = body.get("video_id")
+                    if not video_id:
+                        filename = os.path.basename(key)
+                        video_id = os.path.splitext(filename)[0]
 
-            except Exception as e:
-                print("❌ Error:", e)
+                    process_video(bucket, key, video_id)
+
+                    sqs.delete_message(
+                        QueueUrl=QUEUE_URL,
+                        ReceiptHandle=msg["ReceiptHandle"]
+                    )
+
+                except Exception as e:
+                    print("❌ Message processing error:", e)
+                    traceback.print_exc()
+
+        except Exception as e:
+            print("❌ Polling error:", e)
+            traceback.print_exc()
 
         time.sleep(1)
 

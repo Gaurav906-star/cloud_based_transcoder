@@ -18,6 +18,7 @@ RAW_DIR = "storage/raw"
 @api_view(['POST'])
 def upload_video(request):
     file = request.FILES['file']
+    video_id = str(uuid.uuid4())
     
     file_path = os.path.join(RAW_DIR, file.name)
     s3_client = boto3.client('s3', region_name='us-east-1')
@@ -29,13 +30,16 @@ def upload_video(request):
         "transcoding-raw-videos",
         s3_key,
         ExtraArgs={
-            "ContentType": file.content_type
+            "ContentType": file.content_type,
+            "Metadata": {
+            "video_id": video_id
+        }
         }
         )
     
-    video_id = str(uuid.uuid4())
+   
     # ✅ Save metadata (THIS is where you add it)
-    save_video(video_id, "uploaded")
+    save_video(video_id,file.name ,"uploaded")
 
     return Response({
         "message": "Uploaded locally",
@@ -93,41 +97,50 @@ def videos_page(request):
 
 
 
+dynamodb_resource = boto3.resource('dynamodb', region_name ='us-east-1')
 
 def get_videos(request):
-    data = get_all_videos()
+    try:
+        table = dynamodb_resource.Table('videos')
+        response = table.scan()
+        items = response.get("Items", [])
 
-    result = []
+        from datetime import datetime
 
-    for name, info in data.items():
+        def safe_created_at(item):
+            value = item.get("created_at")
 
-        status = info.get("status", "pending")
-        progress = info.get("progress", 0)
+            if isinstance(value, str):
+                try:
+                    return datetime.fromisoformat(value.replace("Z", ""))
+                except:
+                    return datetime.min
 
-        urls = {}
+            return datetime.min
 
-        # 720p
-        path_720 = os.path.join(PROCESSED_DIR, f"720p_{name}.mp4")
-        if os.path.exists(path_720):
-            urls["720p"] = f"/media/720p_{name}.mp4"
+        # ✅ SAFE SORT
+        items.sort(key=safe_created_at, reverse=True)
 
-        # 480p
-        path_480 = os.path.join(PROCESSED_DIR, f"480p_{name}.mp4")
-        if os.path.exists(path_480):
-            urls["480p"] = f"/media/480p_{name}.mp4"
+        result = []
+        for item in items:
+            result.append({
+                "id": item.get("video_id"),
+                "name": item.get("file_name"),
+                "status": item.get("status", "pending"),
+                "progress": int(item.get("progress", 0)),
+                "hls": item.get("hls_url"),
+                "title": item.get("title"),
+                "tags": item.get("tags", []),
+                "description": item.get("description"),
+                "created_at": item.get("created_at")
+            })
 
-        # 🎬 HLS
-        hls_path = os.path.join(PROCESSED_DIR, f"hls_{name}", "master.m3u8")
-        hls_url = None
-        if os.path.exists(hls_path):
-            hls_url =  f"/media/hls_{name}/master.m3u8"
+        return JsonResponse(result, safe=False)
 
-        result.append({
-            "name": name,
-            "status": status,
-            "progress": progress,
-            "urls": urls,
-            "hls": hls_url   # 🔥 IMPORTANT
+    except Exception as e:
+        print("ERROR:", e)
+        return JsonResponse({
+            "success": False,
+            "data": [],
+            "error": str(e)
         })
-
-    return JsonResponse(result, safe=False)

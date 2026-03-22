@@ -1,119 +1,212 @@
 {% load static %}
-
 <!doctype html>
 
 <html>
-  <head>
+<head>
     <title>TranscodeCloud</title>
     <link rel="stylesheet" href="{% static 'css/style.css' %}" />
-  </head>
 
-  <body>
-    <div class="app">
-      ```
-      <!-- Sidebar -->
-      <div class="sidebar">
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: url("https://images.unsplash.com/photo-1517602302552-471fe67acf66")
+                        no-repeat center center/cover;
+            color: white;
+        }
+
+        /* dark overlay for readability */
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.75);
+            z-index: -1;
+        }
+
+        .app {
+            display: flex;
+        }
+
+        .sidebar {
+            width: 250px;
+            background: rgba(0,0,0,0.7);
+            padding: 20px;
+        }
+
+        .sidebar ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .sidebar li {
+            padding: 10px;
+            cursor: pointer;
+        }
+
+        .sidebar .active {
+            background: #1f2937;
+            border-radius: 8px;
+        }
+
+        .main {
+            flex: 1;
+            padding: 40px;
+        }
+
+        .hero h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .features {
+            display: flex;
+            gap: 20px;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+
+        .feature-card {
+            background: rgba(17,24,39,0.8);
+            padding: 20px;
+            border-radius: 12px;
+            flex: 1;
+            min-width: 220px;
+        }
+
+        .upload-box {
+            margin-top: 40px;
+            padding: 40px;
+            border: 2px dashed #4b5563;
+            border-radius: 12px;
+            text-align: center;
+            cursor: pointer;
+            background: rgba(0,0,0,0.5);
+        }
+
+        /* ✅ Responsive progress bar */
+        .progress-bar {
+            width: 100%;
+            height: 12px;
+            background: #374151;
+            border-radius: 10px;
+            margin-top: 20px;
+            overflow: hidden;
+        }
+
+        #progress {
+            height: 100%;
+            width: 0%;
+            background: #10b981;
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+
+<body>
+<div class="app">
+
+    <!-- Sidebar -->
+    <div class="sidebar">
         <h2>⚡ TranscodeCloud</h2>
-        <p class="sub">MSc Cloud Computing</p>
 
         <ul>
-          <li class="active">⬆ Upload Video</li>
-          <li onclick="goToVideos()">🎬 Videos</li>
+            <li class="active">⬆ Upload Video</li>
+            <li onclick="goToVideos()">🎬 Videos</li>
         </ul>
-      </div>
+    </div>
 
-      <!-- Main -->
-      <div class="main">
+    <!-- Main -->
+    <div class="main">
+
         <!-- HERO -->
         <div class="hero">
-          <h1>🎬 Cloud Video Transcoding Platform</h1>
-          <p>
-            Upload, process and stream videos in multiple resolutions — powered
-            by Django + FFmpeg + WebSockets
-          </p>
+            <h1>🎬 Cloud Video Transcoding Platform</h1>
+            <p>
+                Upload, process and stream videos in multiple resolutions
+            </p>
         </div>
 
         <!-- FEATURES -->
         <div class="features">
-          <div class="feature-card">
-            <h3>⚡ Multi-Resolution</h3>
-            <p>720p, 480p, 360p video outputs</p>
-          </div>
+            <div class="feature-card">
+                <h3>⚡ Multi-Resolution</h3>
+                <p>720p, 480p, 360p video outputs</p>
+            </div>
 
-          <div class="feature-card">
-            <h3>📡 Real-Time Processing</h3>
-            <p>Live progress updates via WebSockets</p>
-          </div>
+            <div class="feature-card">
+                <h3>📡 Real-Time Processing</h3>
+                <p>Live progress updates via WebSockets</p>
+            </div>
 
-          <div class="feature-card">
-            <h3>🎧 Audio Extraction</h3>
-            <p>AAC + MP3 support</p>
-          </div>
-
-          <div class="feature-card">
-            <h3>🚀 Scalable Architecture</h3>
-            <p>Ready for AWS Lambda & S3</p>
-          </div>
+            <div class="feature-card">
+                <h3>🎧 Audio Extraction</h3>
+                <p>AAC + MP3 support</p>
+            </div>
+            <div class="feature-card">
+                <h3>AI Powered</h3>
+                <p>Metada Extraction</p>
+            </div>
         </div>
 
         <!-- UPLOAD BOX -->
         <div class="upload-box" onclick="openFilePicker()">
-          <input type="file" id="fileInput" hidden />
+            <input type="file" id="fileInput" hidden />
 
-          <h2>⬆ Upload Video</h2>
-          <p>Click or drag & drop your video here</p>
+            <h2>⬆ Upload Video</h2>
+            <p>Click or drag & drop your video here</p>
 
-          <p id="fileName"></p>
+            <p id="fileName"></p>
 
-          <div class="progress-bar">
-            <div id="progress"></div>
-          </div>
+            <div class="progress-bar">
+                <div id="progress"></div>
+            </div>
         </div>
-      </div>
-      ```
+
     </div>
 
-    <script>
-      function goToVideos() {
-        window.location.href = "/videos-page/";
-      }
+</div>
 
-      function openFilePicker() {
-        document.getElementById("fileInput").click();
-      }
+<script>
+function goToVideos() {
+    window.location.href = "/videos-page/";
+}
 
-      document
-        .getElementById("fileInput")
-        .addEventListener("change", function () {
-          let file = this.files[0];
-          if (!file) return;
+function openFilePicker() {
+    document.getElementById("fileInput").click();
+}
 
-          document.getElementById("fileName").innerText = file.name;
+document.getElementById("fileInput")
+.addEventListener("change", function () {
+    let file = this.files[0];
+    if (!file) return;
 
-          uploadVideo(file);
-        });
+    document.getElementById("fileName").innerText = file.name;
+    uploadVideo(file);
+});
 
-      function uploadVideo(file) {
-        let xhr = new XMLHttpRequest();
-        let formData = new FormData();
+function uploadVideo(file) {
+    let xhr = new XMLHttpRequest();
+    let formData = new FormData();
 
-        formData.append("file", file);
+    formData.append("file", file);
 
-        xhr.upload.onprogress = function (e) {
-          if (e.lengthComputable) {
+    xhr.upload.onprogress = function (e) {
+        if (e.lengthComputable) {
             let percent = (e.loaded / e.total) * 100;
             document.getElementById("progress").style.width = percent + "%";
-          }
-        };
+        }
+    };
 
-        xhr.onload = function () {
-          alert("Upload complete 🚀");
-          document.getElementById("progress").style.width = "0%";
-        };
+    xhr.onload = function () {
+        alert("Upload complete 🚀");
+        document.getElementById("progress").style.width = "0%";
+    };
 
-        xhr.open("POST", "/upload/");
-        xhr.send(formData);
-      }
-    </script>
-  </body>
+    xhr.open("POST", "/upload/");
+    xhr.send(formData);
+}
+</script>
+
+</body>
 </html>
