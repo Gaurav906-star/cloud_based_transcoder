@@ -7,15 +7,33 @@ from .db import save_video
 from django.shortcuts import render
 from django.http import JsonResponse
 from .db import get_all_videos
+from .pdf_utils import generate_styled_pdf
 import boto3
 import uuid
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
+from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.decorators import parser_classes
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny
+from rest_framework.response import Response
+from rest_framework.authtoken.models import Token
+from rest_framework import status
+from django.contrib.auth import authenticate
+from rest_framework.permissions import IsAuthenticated
+from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
+
+
 
 
 
 
 RAW_DIR = "storage/raw"
 
+
 @api_view(['POST'])
+@parser_classes([MultiPartParser])
 def upload_video(request):
     file = request.FILES['file']
     video_id = str(uuid.uuid4())
@@ -48,9 +66,20 @@ def upload_video(request):
         "file_path":f"https://transcoding-raw-videos.s3.amazonaws.com/{s3_key}"
     })
 
+upload_video = swagger_auto_schema(
+    method='post',
+    tags=['🎥 Video'],
+    operation_summary="Upload video",
+    manual_parameters=[
+        openapi.Parameter(
+            'file',
+            openapi.IN_FORM,
+            type=openapi.TYPE_FILE,
+            required=True
+        )
+    ]
+)(upload_video)
 
-def home(request):
-    return render(request, "index.html")
 
 DB_FILE = "storage/db.json"
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -144,3 +173,79 @@ def get_videos(request):
             "data": [],
             "error": str(e)
         })
+        
+
+
+@swagger_auto_schema(
+    method='post',
+    request_body=openapi.Schema(
+        type=openapi.TYPE_OBJECT,
+        additional_properties=openapi.Schema(
+            type=openapi.TYPE_STRING
+        ),
+        example={
+          "title": "Invoice",
+          "customer": "John Doe",
+          "items": ["Laptop", "Mouse", "Keyboard"],
+          "total_amount": "$1200",
+          "status": "Paid"
+        }
+    )
+)
+
+@api_view(['POST'])
+def generate_pdf_api(request):
+    try:
+        data = request.data
+
+        file_path, filename = generate_styled_pdf(data)
+
+        return Response({
+            "success": True,
+            "file_name": filename,
+            "download_url": f"/media/pdfs/{filename}"
+        })
+
+    except Exception as e:
+        return Response({
+            "success": False,
+            "error": str(e)
+        })
+
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def login_api(request):
+    username = request.data.get("username")
+    password = request.data.get("password")
+
+    user = authenticate(username=username, password=password)
+
+    if user is not None:
+        token, created = Token.objects.get_or_create(user=user)
+        return Response({
+            "message": "Login successful",
+            "token": token.key
+        })
+    else:
+        return Response({
+            "error": "Invalid credentials"
+        }, status=status.HTTP_401_UNAUTHORIZED)
+        
+
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def logout_api(request):
+    try:
+        request.user.auth_token.delete()
+        return Response({"message": "Logged out successfully"})
+    except:
+        return Response({"error": "Something went wrong"}, status=400)
+        
+
+@login_required
+def home(request):
+    return render(request, 'index.html')
