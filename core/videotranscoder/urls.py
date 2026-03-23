@@ -22,6 +22,7 @@ schema_view = get_schema_view(
 )
 
 urlpatterns = [
+    
     path('', home),
     path('upload/', upload_video),
     path('videos/', get_videos),

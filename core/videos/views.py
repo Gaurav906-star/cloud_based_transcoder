@@ -23,6 +23,9 @@ from django.contrib.auth import authenticate
 from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
+from django.conf import settings
+from django.core.files.storage import default_storage
+
 
 
 
@@ -198,12 +201,12 @@ def generate_pdf_api(request):
     try:
         data = request.data
 
-        file_path, filename = generate_styled_pdf(data)
+        file_url, filename = generate_styled_pdf(data)
 
         return Response({
             "success": True,
             "file_name": filename,
-            "download_url": f"/media/pdfs/{filename}"
+            "download_url": file_url
         })
 
     except Exception as e:
@@ -211,7 +214,6 @@ def generate_pdf_api(request):
             "success": False,
             "error": str(e)
         })
-
 
 
 @api_view(['POST'])

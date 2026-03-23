@@ -44,7 +44,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'corsheaders',
-    'rest_framework.authtoken'
+    'rest_framework.authtoken',
+    'storages'
 ]
 
 MIDDLEWARE = [
@@ -56,11 +57,14 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware', 
 ]
 
 ROOT_URLCONF = 'videotranscoder.urls'
 
 STATIC_URL = '/static/'
+
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 STATICFILES_DIRS = [
     BASE_DIR / "static",  
@@ -144,9 +148,13 @@ CHANNEL_LAYERS = {
     },
 }
 
-MEDIA_URL = '/media/'
+# MEDIA_URL = '/media/'
 
-MEDIA_ROOT = BASE_DIR / 'storage/processed'
+# MEDIA_ROOT = BASE_DIR / 'storage/processed'
+
+DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
+
+MEDIA_URL = f"https://pdfgeneratorbucket23.s3.amazonaws.com/"
 
 CSRF_TRUSTED_ORIGINS = [
     "https://*.amazonaws.com",

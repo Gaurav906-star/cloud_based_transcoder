@@ -1,0 +1,691 @@
+body {
+margin: 0;
+font-family: 'Segoe UI', sans-serif;
+background: #020617;
+color: white;
+}
+
+.app {
+display: flex;
+}
+
+/* Sidebar */
+.sidebar {
+width: 250px;
+background: #020617;
+border-right: 1px solid #1e293b;
+padding: 20px;
+}
+
+.sidebar h2 {
+margin: 0;
+}
+
+.sub {
+font-size: 12px;
+color: #94a3b8;
+}
+
+.sidebar ul {
+list-style: none;
+padding: 0;
+margin-top: 20px;
+}
+
+.sidebar li {
+padding: 10px;
+color: #94a3b8;
+cursor: pointer;
+border-radius: 8px;
+}
+
+.sidebar li:hover {
+background: #1e293b;
+}
+
+.sidebar .active {
+background: #1e293b;
+color: white;
+}
+
+/* Main */
+.main {
+flex: 1;
+padding: 30px;
+}
+
+/* Feature cards */
+.features {
+display: flex;
+gap: 20px;
+margin-bottom: 20px;
+}
+
+.card {
+background: #020617;
+border: 1px solid #1e293b;
+padding: 15px;
+border-radius: 10px;
+width: 200px;
+}
+
+.card span {
+color: #94a3b8;
+font-size: 12px;
+}
+
+/* Upload Box */
+.upload-box {
+border: 2px dashed #1e293b;
+padding: 50px;
+text-align: center;
+margin: 20px 0;
+border-radius: 15px;
+transition: 0.3s;
+cursor: pointer;
+}
+
+.upload-box.dragover {
+border-color: #2563eb;
+background: rgba(37, 99, 235, 0.1);
+}
+
+#fileName {
+margin-top: 10px;
+color: #22c55e;
+}
+
+/* Progress Bar */
+.progress-bar {
+width: 100%;
+height: 6px;
+background: #1e293b;
+margin-top: 15px;
+border-radius: 5px;
+overflow: hidden;
+}
+
+#progress {
+height: 100%;
+width: 0%;
+background: #22c55e;
+transition: width 0.2s;
+}
+
+/* Upload Button */
+.upload-btn {
+width: 100%;
+padding: 15px;
+margin-top: 20px;
+border: none;
+border-radius: 10px;
+background: linear-gradient(to right, #2563eb, #06b6d4);
+color: white;
+font-size: 16px;
+cursor: pointer;
+transition: 0.3s;
+}
+
+.upload-btn:hover {
+opacity: 0.9;
+}
+
+
+.video-card {
+background: #020617;
+border: 1px solid #1e293b;
+padding: 20px;
+margin: 15px 0;
+border-radius: 12px;
+}
+
+.video-info {
+display: flex;
+justify-content: space-between;
+align-items: center;
+}
+
+.video-card video {
+width: 400px;
+margin-top: 10px;
+border-radius: 10px;
+}
+
+/* Status badges */
+.status {
+padding: 5px 10px;
+border-radius: 20px;
+font-size: 12px;
+}
+
+.status.uploaded {
+background: gray;
+}
+
+.status.processing {
+background: orange;
+}
+
+.status.processed {
+background: #22c55e;
+}
+
+/* Processing animation */
+.processing {
+display: flex;
+align-items: center;
+gap: 10px;
+margin-top: 10px;
+}
+
+.spinner {
+width: 20px;
+height: 20px;
+border: 3px solid #1e293b;
+border-top: 3px solid #22c55e;
+border-radius: 50%;
+animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+100% {
+transform: rotate(360deg);
+}
+}
+
+
+.video-card {
+background: #020617;
+border: 1px solid #1e293b;
+padding: 20px;
+margin: 15px 0;
+border-radius: 12px;
+}
+
+.video-info {
+display: flex;
+justify-content: space-between;
+align-items: center;
+}
+
+.video-card video {
+width: 400px;
+margin-top: 10px;
+border-radius: 10px;
+}
+
+/* Status */
+.status {
+padding: 5px 10px;
+border-radius: 20px;
+font-size: 12px;
+}
+
+.status.processing {
+background: orange;
+}
+
+.status.processed {
+background: #22c55e;
+}
+
+/* Progress */
+.progress-container {
+width: 100%;
+height: 8px;
+background: #1e293b;
+border-radius: 5px;
+margin-top: 10px;
+}
+
+.progress-fill {
+height: 100%;
+background: #22c55e;
+transition: width 0.5s;
+}
+
+/* Resolution buttons */
+.res-buttons {
+margin-top: 10px;
+}
+
+.res-buttons button {
+margin-right: 5px;
+padding: 6px 10px;
+background: #2563eb;
+border: none;
+border-radius: 6px;
+color: white;
+cursor: pointer;
+}
+
+.res-buttons button:hover {
+opacity: 0.9;
+}
+.video-card {
+background: #020617;
+border: 1px solid #1e293b;
+padding: 20px;
+margin: 15px 0;
+border-radius: 12px;
+}
+
+.video-info {
+display: flex;
+justify-content: space-between;
+align-items: center;
+}
+
+.video-card video {
+width: 400px;
+margin-top: 10px;
+border-radius: 10px;
+}
+
+/* Status */
+.status {
+padding: 5px 10px;
+border-radius: 20px;
+font-size: 12px;
+}
+
+.status.processing {
+background: orange;
+}
+
+.status.processed {
+background: #22c55e;
+}
+
+/* Progress bar */
+.progress-container {
+width: 100%;
+height: 8px;
+background: #1e293b;
+border-radius: 5px;
+margin-top: 10px;
+}
+
+.progress-fill {
+height: 100%;
+background: #22c55e;
+transition: width 0.3s;
+}
+
+/* Resolution buttons */
+.res-buttons {
+margin-top: 10px;
+}
+
+.res-buttons button {
+margin-right: 5px;
+padding: 6px 10px;
+background: #2563eb;
+border: none;
+border-radius: 6px;
+color: white;
+cursor: pointer;
+}
+
+.res-buttons button:hover {
+opacity: 0.9;
+}
+.upload-btn {
+width: 250px;
+margin: 20px auto;
+display: block;
+}
+
+#fileName {
+text-align: center;
+margin-top: 10px;
+color: #22c55e;
+}
+
+/* Progress bar */
+.progress-bar {
+width: 60%;
+height: 8px;
+background: #1e293b;
+margin: 20px auto;
+border-radius: 5px;
+}
+
+#progress {
+height: 100%;
+width: 0%;
+background: #22c55e;
+transition: width 0.3s;
+}
+
+.hero {
+text-align: center;
+margin-bottom: 30px;
+}
+
+.hero h1 {
+font-size: 28px;
+}
+
+.hero p {
+color: #94a3b8;
+}
+
+/* Features */
+.features {
+display: grid;
+grid-template-columns: repeat(4, 1fr);
+gap: 15px;
+margin-bottom: 30px;
+}
+
+.feature-card {
+background: #020617;
+padding: 20px;
+border-radius: 12px;
+border: 1px solid #1e293b;
+}
+
+/* Upload box */
+.upload-box {
+border: 2px dashed #334155;
+padding: 40px;
+text-align: center;
+border-radius: 12px;
+cursor: pointer;
+}
+
+.upload-box:hover {
+border-color: #2563eb;
+}
+
+/* Progress bar */
+.progress-bar {
+width: 60%;
+height: 8px;
+background: #1e293b;
+margin: 20px auto;
+border-radius: 5px;
+}
+
+#progress {
+height: 100%;
+width: 0%;
+background: #22c55e;
+transition: width 0.3s;
+}
+.video-card {
+background: #020617;
+border: 1px solid #1e293b;
+padding: 20px;
+margin: 15px 0;
+border-radius: 12px;
+}
+
+.video-info {
+display: flex;
+justify-content: space-between;
+align-items: center;
+}
+
+.status {
+padding: 6px 12px;
+border-radius: 20px;
+font-size: 12px;
+font-weight: bold;
+}
+
+.status.pending {
+background: #facc15;
+color: black;
+}
+
+.status.processing {
+background: orange;
+color: black;
+}
+
+.status.processed {
+background: #22c55e;
+color: white;
+}
+
+.progress-container {
+width: 100%;
+height: 8px;
+background: #1e293b;
+border-radius: 5px;
+margin-top: 10px;
+}
+
+.progress-fill {
+height: 100%;
+background: #22c55e;
+transition: width 0.3s;
+}
+
+.res-buttons {
+margin-top: 10px;
+}
+
+.res-buttons button {
+margin-right: 5px;
+padding: 6px 10px;
+background: #2563eb;
+border: none;
+border-radius: 6px;
+color: white;
+cursor: pointer;
+}
+
+video {
+margin-top: 10px;
+border-radius: 10px;
+}
+
+.video-card {
+background: #020617;
+border: 1px solid #1e293b;
+padding: 20px;
+margin: 15px 0;
+border-radius: 12px;
+}
+
+.video-info {
+display: flex;
+justify-content: space-between;
+align-items: center;
+}
+
+.status {
+padding: 6px 12px;
+border-radius: 20px;
+font-size: 12px;
+font-weight: bold;
+}
+
+.status.pending {
+background: #facc15;
+color: black;
+}
+
+.status.processing {
+background: orange;
+color: black;
+}
+
+.status.processed {
+background: #22c55e;
+color: white;
+}
+
+.progress-container {
+width: 100%;
+height: 8px;
+background: #1e293b;
+border-radius: 5px;
+margin-top: 10px;
+}
+
+.progress-fill {
+height: 100%;
+background: #22c55e;
+transition: width 0.3s;
+}
+
+.res-buttons {
+margin-top: 10px;
+}
+
+.res-buttons button {
+padding: 8px 12px;
+background: #2563eb;
+border: none;
+border-radius: 6px;
+color: white;
+cursor: pointer;
+}
+
+video {
+margin-top: 10px;
+border-radius: 10px;
+}
+
+body {
+margin: 0;
+font-family: 'Segoe UI', sans-serif;
+background: #020617;
+color: white;
+}
+
+.app {
+display: flex;
+}
+
+/* Sidebar */
+.sidebar {
+width: 220px;
+background: #020617;
+border-right: 1px solid #1e293b;
+padding: 20px;
+height: 100vh;
+}
+
+.sidebar h2 {
+color: #3b82f6;
+}
+
+.sidebar ul {
+list-style: none;
+padding: 0;
+}
+
+.sidebar li {
+padding: 10px;
+cursor: pointer;
+border-radius: 8px;
+}
+
+.sidebar li:hover,
+.sidebar .active {
+background: #1e293b;
+}
+
+/* Main */
+.main {
+flex: 1;
+padding: 30px;
+}
+
+/* Grid */
+.grid {
+display: grid;
+grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+gap: 20px;
+}
+
+/* Card */
+.video-card {
+background: #020617;
+border: 1px solid #1e293b;
+border-radius: 12px;
+padding: 20px;
+transition: 0.3s;
+}
+
+.video-card:hover {
+transform: translateY(-5px);
+border-color: #3b82f6;
+}
+
+/* Header */
+.video-header {
+display: flex;
+justify-content: space-between;
+}
+
+/* Status */
+.status {
+padding: 4px 10px;
+border-radius: 20px;
+font-size: 12px;
+}
+
+.status.pending { background: #facc15; color: black; }
+.status.processing { background: orange; }
+.status.processed { background: #22c55e; }
+
+/* Progress */
+.progress-bar {
+height: 8px;
+background: #1e293b;
+border-radius: 5px;
+margin: 10px 0;
+}
+
+.progress {
+height: 100%;
+background: #3b82f6;
+border-radius: 5px;
+}
+
+.progress-text {
+font-size: 12px;
+}
+
+/* Player */
+.player-wrapper {
+position: relative;
+}
+
+video {
+width: 100%;
+border-radius: 10px;
+margin-top: 10px;
+}
+
+/* Play button overlay */
+.play-btn {
+position: absolute;
+top: 40%;
+left: 40%;
+padding: 10px 15px;
+background: #3b82f6;
+border: none;
+color: white;
+border-radius: 50px;
+cursor: pointer;
+}
+
+/* Processing box */
+.processing-box {
+margin-top: 15px;
+padding: 20px;
+text-align: center;
+background: #1e293b;
+border-radius: 10px;
+}
+
+
+
+

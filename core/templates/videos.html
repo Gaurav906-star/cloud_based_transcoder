@@ -153,19 +153,25 @@ function setupPlayer(v) {
     const video = document.getElementById(`player-${v.id}`);
 
     if (Hls.isSupported()) {
-        const hls = new Hls();
+        const hls = new Hls({
+            debug: true   // ✅ enable debug logs
+        });
+
         hls.loadSource(v.hls);
         hls.attachMedia(video);
 
-        hls.on(Hls.Events.MANIFEST_PARSED, function () {
+        // 🔥 KEY: detect quality switch
+        hls.on(Hls.Events.LEVEL_SWITCHED, function (event, data) {
+            console.log(`Video ${v.id} switched to level:`, data.level);
+        });
+
+        // 🔥 Show available qualities
+        hls.on(Hls.Events.MANIFEST_PARSED, function (event, data) {
+            console.log("Available levels:", hls.levels);
             video.play().catch(() => {});
         });
 
         players[v.id] = hls;
-
-    } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
-        video.src = v.hls;
-        video.play();
     }
 }
 
